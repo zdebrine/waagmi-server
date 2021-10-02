@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
-const PORT = 3001;
+const PORT = 3000;
 const { pool } = require("./database/config.js");
 const findAccount = require("./helpers/findAccount.js");
 const stripe = require("stripe")(process.env.STRIPE_TOKEN);
