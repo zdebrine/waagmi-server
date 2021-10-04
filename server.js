@@ -1,18 +1,56 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
-const PORT = 3000;
+const PORT = 3001;
 const { pool } = require("./database/config.js");
 const findAccount = require("./helpers/findAccount.js");
 const stripe = require("stripe")(process.env.STRIPE_TOKEN);
 var cors = require("cors");
 const Web3 = require("web3");
+const { Configuration, PlaidApi, PlaidEnvironments } = require('plaid');
+
+const configuration = new Configuration({
+    basePath: PlaidEnvironments.sandbox,
+    baseOptions: {
+        headers: {
+            'PLAID-CLIENT-ID': process.env.PLAID_CLIENT,
+            'PLAID-SECRET': process.env.PLAID_SANDBOX_SECRET,
+        },
+    },
+});
+
+const plaidClient = new PlaidApi(configuration);
 
 const axios = require("axios");
 
 app.use(cors());
 app.use(express.static("./client/dist"));
 app.use(express.json());
+
+app.get("/create_plaid_token", async (req, res, next) => {
+    const request = {
+        user: {
+            client_user_id: 'user-id',
+        },
+        client_name: 'Seedling',
+        products: ['auth', 'transactions'],
+        country_codes: ['US'],
+        language: 'en',
+        webhook: 'https://sample-web-hook.com',
+        account_filters: {
+            depository: {
+                account_subtypes: ['checking', 'savings'],
+            },
+        },
+    };
+    try {
+        const response = await plaidClient.linkTokenCreate(request);
+        const linkToken = response.data.link_token;
+        res.status(200).send(linkToken)
+    } catch (error) {
+        console.log(error)
+    }
+});
 
 //===============================
 // ACCEPT A COMPANY AFTER REVIEW
