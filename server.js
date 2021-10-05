@@ -4,6 +4,7 @@ const app = express();
 const PORT = 3001;
 const { pool } = require("./database/config.js");
 const findAccount = require("./helpers/findAccount.js");
+const { findRevenue, findProfit, findExpenses } = require("./helpers/calculateTransactions.js");
 const stripe = require("stripe")(process.env.STRIPE_TOKEN);
 var cors = require("cors");
 const Web3 = require("web3");
@@ -22,6 +23,7 @@ const configuration = new Configuration({
 const plaidClient = new PlaidApi(configuration);
 
 const axios = require("axios");
+const moment = require("moment");
 
 app.use(cors());
 app.use(express.static("./client/dist"));
@@ -50,6 +52,28 @@ app.get("/create_plaid_token", async (req, res, next) => {
     } catch (error) {
         console.log(error)
     }
+});
+
+app.get("/bank_transactions", async (req, res) => {
+    const public_token = req.query.publicToken
+    const plaidResponse = await plaidClient.itemPublicTokenExchange({ public_token: public_token });
+    const access_token = plaidResponse.data.access_token;
+    const now = moment();
+    const today = now.format('YYYY-MM-DD');
+    const thirtyDaysAgo = now.subtract(30, 'days').format('YYYY-MM-DD');
+
+    const response = await plaidClient.transactionsGet({
+        access_token,
+        start_date: thirtyDaysAgo,
+        end_date: today,
+    });
+    const transactions = response.data.transactions;
+    const responseBody = {
+        revenue: findRevenue(transactions),
+        profits: findProfit(transactions),
+        expenses: findExpenses(transactions)
+    }
+    res.send(responseBody)
 });
 
 //===============================
