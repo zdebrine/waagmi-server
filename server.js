@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
-const PORT = 3001;
+const PORT = 3002;
 const { pool } = require("./database/config.js");
 const findAccount = require("./helpers/findAccount.js");
 const { findRevenue, findProfit, findExpenses } = require("./helpers/calculateTransactions.js");
@@ -55,12 +55,18 @@ app.get("/create_plaid_token", async (req, res, next) => {
 });
 
 app.get("/bank_transactions", async (req, res) => {
+    let plaidResponse;
     const public_token = req.query.publicToken
-    const plaidResponse = await plaidClient.itemPublicTokenExchange({ public_token: public_token });
-    const access_token = plaidResponse.data.access_token;
+    if (public_token) {
+        plaidResponse = await plaidClient.itemPublicTokenExchange({ public_token: public_token });
+    }
+    const access_token = req.query.accessToken || plaidResponse.data.access_token;
     const now = moment();
     const today = now.format('YYYY-MM-DD');
     const thirtyDaysAgo = now.subtract(30, 'days').format('YYYY-MM-DD');
+
+    console.log("public", public_token)
+    console.log("acc", access_token)
 
     const response = await plaidClient.transactionsGet({
         access_token,
@@ -71,7 +77,8 @@ app.get("/bank_transactions", async (req, res) => {
     const responseBody = {
         revenue: findRevenue(transactions),
         profits: findProfit(transactions),
-        expenses: findExpenses(transactions)
+        expenses: findExpenses(transactions),
+        transactions: transactions
     }
     res.send(responseBody)
 });
@@ -646,6 +653,20 @@ app.get("/stripe-user", async (req, res) => {
 app.put("/add-image", (req, res) => {
     pool.query(
         `UPDATE companies SET user_id = '${req.body.image}' WHERE business_name = '${req.body.company}';`,
+        (err, data) => {
+            if (err) {
+                console.log("There was an error adding image", err);
+                res.send();
+            } else {
+                res.status(200).send(data);
+            }
+        }
+    );
+});
+
+app.put("/add-plaid-token", (req, res) => {
+    pool.query(
+        `UPDATE companies SET plaid_token = '${req.body.plaidToken}' WHERE company_id = '${req.body.companyId}';`,
         (err, data) => {
             if (err) {
                 console.log("There was an error adding image", err);
