@@ -24,34 +24,16 @@ const plaidClient = new PlaidApi(configuration);
 
 const axios = require("axios");
 const moment = require("moment");
+const { CreatePlaidToken } = require("./client/CreatePlaidToken/CreatePlaidToken.ts");
+const { AddPlaidTokenToDatabase } = require("./client/AddPlaidTokenToDatabase/AddPlaidTokenToDatabase.ts");
 
 app.use(cors());
 app.use(express.static("./client/dist"));
 app.use(express.json());
 
-app.get("/create_plaid_token", async (req, res, next) => {
-    const request = {
-        user: {
-            client_user_id: 'user-id',
-        },
-        client_name: 'Seedling',
-        products: ['auth', 'transactions'],
-        country_codes: ['US'],
-        language: 'en',
-        webhook: 'https://sample-web-hook.com',
-        account_filters: {
-            depository: {
-                account_subtypes: ['checking', 'savings'],
-            },
-        },
-    };
-    try {
-        const response = await plaidClient.linkTokenCreate(request);
-        const linkToken = response.data.link_token;
-        res.status(200).send(linkToken)
-    } catch (error) {
-        console.log(error)
-    }
+app.get("/create_plaid_token", async (req, res) => {
+    const response = await CreatePlaidToken(req, res, plaidClient)
+    return response
 });
 
 app.get("/bank_transactions", async (req, res) => {
@@ -59,6 +41,7 @@ app.get("/bank_transactions", async (req, res) => {
     const public_token = req.query.publicToken
     if (public_token) {
         plaidResponse = await plaidClient.itemPublicTokenExchange({ public_token: public_token });
+        AddPlaidTokenToDatabase(plaidResponse.data.access_token, req.query.companyId)
     }
     const access_token = req.query.accessToken || plaidResponse.data.access_token;
     const now = moment();
