@@ -36,6 +36,14 @@ app.get("/create_plaid_token", async (req, res) => {
     return response
 });
 
+app.get("/user-assets", async (req, res) => {
+    const url = `https://api.opensea.io/api/v1/assets?owner=${req.query.walletId}&order_direction=desc&offset=0`
+    axios.get(url).
+        then((response) => {
+            res.send(response.data.assets)
+        }).catch(error => console.log(error))
+});
+
 app.get("/bank_transactions", async (req, res) => {
     let plaidResponse;
     const public_token = req.query.publicToken
@@ -222,6 +230,7 @@ app.get("/company-info", (req, res, next) => {
 
 app.get("/user-profile", async (req, res) => {
     let subId = req.query.subId;
+
     pool.query(`SELECT * FROM users WHERE sub_id = '${subId}';`, (err, data) => {
         if (err) {
             console.log("There was an error getting user's information", err);
@@ -633,9 +642,9 @@ app.get("/stripe-user", async (req, res) => {
 // ADD IMAGE TO COMPANY PROFILE
 //==============================
 
-app.put("/add-image", (req, res) => {
+app.put("/add-data", (req, res) => {
     pool.query(
-        `UPDATE companies SET user_id = '${req.body.image}' WHERE business_name = '${req.body.company}';`,
+        `UPDATE ${req.body.tableName} SET ${req.body.columnName} = '${req.body.data}' WHERE ${req.body.columnReference} = '${req.body.reference}';`,
         (err, data) => {
             if (err) {
                 console.log("There was an error adding image", err);
