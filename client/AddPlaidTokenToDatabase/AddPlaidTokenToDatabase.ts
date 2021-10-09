@@ -1,5 +1,4 @@
-const { pool } = require("../../database/config.js");
-const AddPlaidTokenToDatabase = (plaidToken, companyId) => {
+const AddPlaidTokenToDatabase = (plaidToken, companyId, pool) => {
   pool.query(
     `UPDATE companies SET plaid_token = '${plaidToken}' WHERE company_id = '${companyId}';`,
     (err, data) => {
