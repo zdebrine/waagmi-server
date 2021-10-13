@@ -1,7 +1,7 @@
 {
-  "name": "seedling-server",
+  "name": "standalone-server",
   "version": "1.0.0",
-  "description": "Seedling server",
+  "description": "Standalone Express Server",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -15,14 +15,10 @@
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
-    "moment": "^2.29.1",
     "nodemon": "^2.0.13",
     "pg": "^8.7.1",
-    "plaid": "^9.3.0",
     "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "stripe": "^8.178.0",
-    "web3": "^1.6.0"
+    "react-dom": "^17.0.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.15.7",
