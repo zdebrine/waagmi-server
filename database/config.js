@@ -6,10 +6,10 @@ var config = {
   host: process.env.DB_HOST,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
-  ssl: { rejectUnauthorized: false },
+  // ssl: { rejectUnauthorized: false },
 };
 
-console.log("DATABASE CONNECTED");
 var pool = new pg.Pool(config);
+console.log("DATABASE CONNECTED");
 
 module.exports = { pool };

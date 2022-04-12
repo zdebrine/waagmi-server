@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon server.js",
-    "build": "webpack"
+    "build": "webpack",
+    "seed": "cd database && psql --host=localhost --port=5432 --username=postgres < schema.sql"
   },
   "author": "",
   "license": "ISC",
